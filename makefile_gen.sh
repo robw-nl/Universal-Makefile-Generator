@@ -1,6 +1,6 @@
 #!/bin/bash
 # update name for your project
-# you may have to update some code for your specific situations
+# you may have to update some code for your specific situation
 # in the for entry in $RAW_INCLUDES; do loop
 
 PROJECT_NAME="pacman"
