@@ -1,8 +1,11 @@
 #!/bin/bash
-# Hardcoded to new infrastructure standard
+# update name for your project
+# you may have to update some code for your specific situations
+# in the for entry in $RAW_INCLUDES; do loop
+
 PROJECT_NAME="pacman"
 
-# --- UNIVERSAL DYNAMIC DISCOVERY (Enhanced for Folders) ---
+# --- DYNAMIC DISCOVERY (including folders) ---
 RAW_INCLUDES=$(grep -h "#include" *.c 2>/dev/null | tr -d '\r' | awk -F'[<">]' '{print $2}' | sed 's/\.h//g')
 
 LDLIBS_AUTO=""
