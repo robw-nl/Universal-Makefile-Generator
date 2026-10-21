@@ -1,5 +1,7 @@
 Smart Makefile bash script and code diff generator (makefile_gen.sh).
-It fully autonomously includes discovery header, creates a compile_flags.txt, **and** on each build generates your local source diff (daily_ledger.md) so no GitGub needed e.g. if you're a solo programmer.
+It fully autonomously discovers headers and other includes, creates a compile_flags.txt, **and** on each build updates your local source diff (daily_ledger.md) so no GitGub needed e.g. if you're a solo programmer.
+
+daily_ledger.md and the .source folder to calculate all diffs ate recreated each day on the first build. Everything resides _(non-destructive)_, in your project folder.
 
 Invoke the generator at each build. I do that in Kate, makefile_gen.sh is linked to a Kate External Tool and associated shortcut but every configurable editor should be able to work with this.
 
