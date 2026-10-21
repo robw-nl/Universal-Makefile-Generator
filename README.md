@@ -75,10 +75,10 @@ Use this for your clang C builds.
     gtk_grid_attach(GTK_GRID(vid_grid), vh_exp, 2, 0, 1, 1);
 ```
 
-Required directory structure (project root (QJams) and code directory (source) are mandatory.
-But you can of course update the script to your needs.
+**Required directory structure (project root (QJams) and code directory (source) are mandatory.**
+You can of course update the script to your needs.
 /home/<USER>/Files/C/<PROJECT-ROOT>/source/
-Use the project name for <PROJECT-ROOT>
+Use the **project name** for <PROJECT-ROOT>
 
 
 
