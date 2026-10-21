@@ -77,8 +77,8 @@ Use this for your clang C builds.
 
 **Required directory structure (project root (QJams) and code directory (source) are mandatory.**
 You can of course update the script to your needs.
-/home/<USER>/Files/C/<PROJECT-ROOT>/source/
-Use the **project name** for <PROJECT-ROOT>
+/home/_USER_/Files/C/_PROJECT-ROOT_/source/
+Use the _project name_ for _PROJECT-ROOT_
 
 
 
