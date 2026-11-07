@@ -2,6 +2,7 @@
 # -----------------------------------------------------------------------------
 # @file makefile_gen.sh
 # @brief Modular, State-Cached, Self-Healing Build Generator for C Projects.
+# @version 5.0.0 - November 6, 2026
 # -----------------------------------------------------------------------------
 set -uo pipefail
 
