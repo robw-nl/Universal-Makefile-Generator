@@ -372,6 +372,21 @@ reset_daily_ledger() {
         [[ -f "$LEDGER_DATE_FILE" ]] && LAST_RESET=$(<"$LEDGER_DATE_FILE")
 
         if [[ "$LAST_RESET" != "$TODAY" ]]; then
+            # --- DAILY FORMAT & CACHE SYNC BASELINE ---
+            if command -v clang-format >/dev/null 2>&1 && [[ -x "./format-source.sh" ]]; then
+                echo "--- Executing daily formatting baseline ---"
+                ./format-source.sh "$PWD"
+
+                # Silently synchronize the CBT cache to swallow formatting changes
+                rsync -a --delete \
+                    --exclude='.source*' --exclude='*.o' --exclude='*.d' \
+                    --exclude='resources.c' --exclude='QJams*' --exclude='*.tmp' \
+                    --exclude='*.log' --exclude='makefile' --exclude='ledger.mk' \
+                    --exclude='compile_flags.txt' --exclude='.cbt_task' \
+                    ./ .source_cache/
+            fi
+            # ------------------------------------------
+
             local TMP_LEDGER
             TMP_LEDGER=$(mktemp ".source/.daily_ledger.XXXXXX") || exit 1
             if : > "$TMP_LEDGER" && mv -f "$TMP_LEDGER" "$LEDGER_FILE"; then
@@ -421,9 +436,11 @@ generate_makefile() {
 
     local CBT_INCLUDE=""
     local CBT_HOOK=""
+    local CBT_DEP=""
     if [[ -f "ledger.mk" ]]; then
         CBT_INCLUDE="-include ledger.mk"
         CBT_HOOK="@\$(MAKE) --no-print-directory snapshot_prep commit_ledger"
+        CBT_DEP="cbt_sync "
     fi
 
     mkdir -p .source || return 1
@@ -465,16 +482,20 @@ all: optimized
 
 $CBT_INCLUDE
 
+.PHONY: cbt_sync
+cbt_sync:
+	$CBT_HOOK
+
 debug: CFLAGS = \$(BASE_FLAGS) -g -O0 -DDEBUG_MODE
-debug: clean_objs \$(DEBUG_TARGET)
+debug: $CBT_DEP clean_objs \$(DEBUG_TARGET)
 
 optimized: CFLAGS = \$(BASE_FLAGS) -O3 -march=native -flto
 optimized: LDFLAGS = -s
-optimized: clean_objs \$(OPTIMIZED_TARGET)
+optimized: $CBT_DEP clean_objs \$(OPTIMIZED_TARGET)
 
-default: CFLAGS = \$(BASE_FLAGS) -O3 -march=x86-64-v3 -flto
+default: CFLAGS = \$(BASE_FLAGS) -O3 -march=x86-64-v2 -flto
 default: LDFLAGS = -s
-default: clean_objs \$(DEFAULT_TARGET)
+default: $CBT_DEP clean_objs \$(DEFAULT_TARGET)
 
 both: optimized default
 
@@ -491,18 +512,15 @@ endef
 
 \$(DEBUG_TARGET): \$(OBJS)
 	\$(CC) \$(CFLAGS) \$(OBJS) -o \$@ \$(LDLIBS)
-	$CBT_HOOK
 	@echo "--- Debug Build Successful: '\$@' is ready ---"
 
 \$(OPTIMIZED_TARGET): \$(OBJS)
 	\$(CC) \$(CFLAGS) \$(LDFLAGS) \$(OBJS) -o \$@ \$(LDLIBS)
-	$CBT_HOOK
 	\$(STRIP_HOOK)
 	@echo "--- Optimized Build Successful: '\$@' is ready ---"
 
 \$(DEFAULT_TARGET): \$(OBJS)
 	\$(CC) \$(CFLAGS) \$(LDFLAGS) \$(OBJS) -o \$@ \$(LDLIBS)
-	$CBT_HOOK
 	\$(STRIP_HOOK)
 	@echo "--- Default Build Successful: '\$@' is ready ---"
 
