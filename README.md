@@ -5,76 +5,79 @@ daily_ledger.md and the .source folder to calculate all diffs are recreated each
 
 Invoke the generator at each build. I do that in Kate, makefile_gen.sh is linked to a Kate External Tool and associated shortcut but every configurable editor should be able to work with this.
 
-
 Use this for your clang C builds.
 
-
 **Code diff example:**
-
-## Transaction: CBT-20261020-181645 | Time: 18:16:45
+## Transaction: CBT-20261106-105536 | Time: 10:55:36
 **Task:** REGULAR MERGE
-### File: ui_transport.c | In: `static void start_recording_execution(vo`
+
+### File: audio_memory.c
 **--- OLD CODE ---**
 ```c
-                    break;
-                }
-            }
-        }
-
-        backup_track_to_ledger(rec_track);
-
-        if (atomic_load_explicit(&video_is_armed, memory_order_acquire)) {
-            if (media_has_video(ui_state.selected_track_path)) {
-                video_start_frame = 0;
+#include "video_engine.h"
+#include <fcntl.h>
+#include <gtk/gtk.h>
+#include <pthread.h>
+#include <rubberband/rubberband-c.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 ```
 **--- NEW CODE ---**
 ```c
-                    break;
-                }
-            }
-        }
-
-        // Ensure new/recorded tracks have unity gain (1.0f) so they are audible in mixdowns
-        atomic_store_explicit(&master_tracks[rec_track].gain, 1.0f, memory_order_relaxed);
-
-        backup_track_to_ledger(rec_track);
-
-        if (atomic_load_explicit(&video_is_armed, memory_order_acquire)) {
-            if (media_has_video(ui_state.selected_track_path)) {
-                video_start_frame = 0;
+#include "video_engine.h"
+#include <fcntl.h>
+#include <gtk/gtk.h>
+#include <pthread.h>
+#include <rubberband/rubberband-c.h>
+#ifndef RubberBandOptionEngineFiner
+#define RubberBandOptionEngineFiner 0
+#endif
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 ```
 
-## Transaction: CBT-20261020-221004 | Time: 22:10:04
-**Task:** REGULAR MERGE
-
-### File: ui_settings.c | In: `void on_settings_clicked(GtkButton *butt`
+### File: media_io.c | In: `int load_qjams_session(const char *filep`
 **--- OLD CODE ---**
 ```c
-    gtk_widget_set_margin_end(vid_grid, 10);
-    gtk_widget_set_margin_bottom(vid_grid, 15);
-
-    GtkWidget *vh_size = gtk_label_new(NULL); gtk_label_set_markup(GTK_LABEL(vh_size), "<b>Size</b>");
-    GtkWidget *vh_def = gtk_label_new(NULL); gtk_label_set_markup(GTK_LABEL(vh_def), "<b>Default</b>");
-    GtkWidget *vh_exp = gtk_label_new(NULL); gtk_label_set_markup(GTK_LABEL(vh_exp), "<b>Expanded</b>");
-    gtk_widget_set_halign(vh_size, GTK_ALIGN_START);
-
-    gtk_grid_attach(GTK_GRID(vid_grid), vh_size, 0, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(vid_grid), vh_def, 1, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(vid_grid), vh_exp, 2, 0, 1, 1);
+                }
+                fclose(vf);
+                video_restored = true;
+            }
+        }
+    } while (archive_read_next_header(a, &entry) == ARCHIVE_OK);
+    archive_read_close(a);
+    archive_read_free(a);
+    if (!header_loaded || strncmp(header.magic, QJAMS_MAGIC, 4) != 0 ||
+        (header.version < 3 || header.version > 6)) {
+        for (int i = 0; i < QJ_MAX_TRACKS; i++) {
+            if (track_vios[i].data)
+                free(track_vios[i].data);
+            if (parity_vios[i].data)
+                free(parity_vios[i].data);
 ```
 **--- NEW CODE ---**
 ```c
-    gtk_widget_set_margin_end(vid_grid, 10);
-    gtk_widget_set_margin_bottom(vid_grid, 15);
-
-    GtkWidget *vh_size = gtk_label_new(NULL); gtk_label_set_markup(GTK_LABEL(vh_size), "<b>Size</b>");
-    GtkWidget *vh_def = gtk_label_new(NULL); gtk_label_set_markup(GTK_LABEL(vh_def), "<b>Default</b>");
-    GtkWidget *vh_exp = gtk_label_new(NULL); gtk_label_set_markup(GTK_LABEL(vh_exp), "<b>Toggled</b>");
-    gtk_widget_set_halign(vh_size, GTK_ALIGN_START);
-
-    gtk_grid_attach(GTK_GRID(vid_grid), vh_size, 0, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(vid_grid), vh_def, 1, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(vid_grid), vh_exp, 2, 0, 1, 1);
+                }
+                fclose(vf);
+                video_restored = true;
+            }
+        }
+    } while (archive_read_next_header(a, &entry) == ARCHIVE_OK);
+    archive_read_close(a);
+    archive_read_free(a);
+    if (!header_loaded || strncmp(header.magic, QJAMS_MAGIC, 4) != 0 ||
+        (header.version < 3 || header.version > QJAMS_VERSION)) {
+        for (int i = 0; i < QJ_MAX_TRACKS; i++) {
+            if (track_vios[i].data)
+                free(track_vios[i].data);
+            if (parity_vios[i].data)
+                free(parity_vios[i].data);
 ```
 
 **Required directory structure (project root (QJams) and code directory (source) are mandatory.**
