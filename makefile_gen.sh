@@ -2,7 +2,6 @@
 # -----------------------------------------------------------------------------
 # @file makefile_gen.sh
 # @brief Modular, State-Cached, Self-Healing Build Generator for C Projects.
-# @version 5.0.0 - November 6, 2026
 # -----------------------------------------------------------------------------
 set -uo pipefail
 
@@ -146,7 +145,7 @@ check_state() {
     SCRIPT_MTIME=$(stat -c%Y "$0" 2>/dev/null || echo "0")
 
     local STATE_STRING="ENV:${ENV_ID}|SRCS:${SRCS}|INC:${RAW_INCLUDES}|CBT:${CBT_PRESENT}|DEPS:${DEPS_CONTENT}|DICT:${DICT_CONTENT}|GDICT:${GLOBAL_DICT_CONTENT}|SCRIPT:${SCRIPT_MTIME}"
-    CANDIDATE_HASH=$(printf '\%s' "$STATE_STRING" | md5sum | awk '{print $1}')
+    CANDIDATE_HASH=$(printf '%s' "$STATE_STRING" | md5sum | awk '{print $1}')
 
     if [[ -f "$STATE_FILE" && -f "makefile" && -f "compile_flags.txt" ]]; then
         local SAVED_HASH
@@ -324,7 +323,7 @@ CBT_EXCLUDES = --exclude='.source*' --exclude='*.o' --exclude='*.d' --exclude='r
 
 snapshot_prep:
 	@mkdir -p .source .source_cache
-	@TMP_DIFF="/tmp/qjams_pending.diff"; \
+	@TMP_DIFF="/tmp/$(TARGET)_pending.diff"; \
 	if [ -z "$$(ls -A .source_cache 2>/dev/null)" ]; then \
 		echo "--- Initializing source cache (skipping initial diff) ---"; \
 		rsync -a --delete $(CBT_EXCLUDES) ./ .source_cache/; \
@@ -335,7 +334,7 @@ snapshot_prep:
 
 commit_ledger:
 	@LEDGER=".source/daily_ledger.md"; \
-	TMP_DIFF="/tmp/qjams_pending.diff"; \
+	TMP_DIFF="/tmp/$(TARGET)_pending.diff"; \
 	if [ -s "$$TMP_DIFF" ]; then \
 		echo "--- Code changes verified. Committing to $$LEDGER ---"; \
 		TX_ID="CBT-$$(date +%Y%m%d-%H%M%S)"; \
@@ -381,7 +380,7 @@ reset_daily_ledger() {
                 # Silently synchronize the CBT cache to swallow formatting changes
                 rsync -a --delete \
                     --exclude='.source*' --exclude='*.o' --exclude='*.d' \
-                    --exclude='resources.c' --exclude='QJams*' --exclude='*.tmp' \
+                    --exclude='resources.c' --exclude="${PROJECT_NAME}*" --exclude='*.tmp' \
                     --exclude='*.log' --exclude='makefile' --exclude='ledger.mk' \
                     --exclude='compile_flags.txt' --exclude='.cbt_task' \
                     ./ .source_cache/
@@ -529,7 +528,7 @@ endef
 
 ifneq (\$(GRESOURCE_XML),)
 # RESOURCE COMPILATION
-UI_FILES = \$(shell find resources -type f -name '*.ui' -o -name '*.png' 2>/dev/null)
+UI_FILES = \$(shell find resources -type f \( -name '*.ui' -o -name '*.png' \) 2>/dev/null)
 
 resources.c: \$(GRESOURCE_XML) \$(UI_FILES)
 	glib-compile-resources \$(GRESOURCE_XML) --target=resources.c --generate-source --sourcedir=resources
@@ -538,8 +537,6 @@ resources.c: \$(GRESOURCE_XML) \$(UI_FILES)
 	@mkdir -p \$(TMP_DIR)
 	\$(CC) \$(CFLAGS) -c \$< -o \$@
 endif
-
-\$(TMP_DIR)/resources.o: resources.c
 
 \$(TMP_DIR)/%.o: %.c
 	@mkdir -p \$(TMP_DIR)
